@@ -1,17 +1,159 @@
+#include <iostream>
+
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <cstdint>
+#include <list>
 #include "lib/leetlib.h"
-#include <math.h>
+
+class Timer
+{
+public:
+    Timer() :
+        initialTime(std::chrono::steady_clock::now())
+    {}
+    
+    uint64_t getElapsedTimeInMilliseconds()
+    {
+        endTime = std::chrono::steady_clock::now();
+        uint64_t result = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(endTime - initialTime).count());
+        initialTime = endTime;
+        return result;
+    }
+
+private:
+    std::chrono::steady_clock::time_point initialTime;
+    std::chrono::steady_clock::time_point endTime;
+};
+
+class PlayerShip
+{
+public:
+    PlayerShip() :
+        PlayerShip(nullptr)
+    {}
+
+    PlayerShip(void* sprite) :
+        x(400.0f),
+        y(550.0f),
+        size(50.0f),
+        sprite(sprite)
+    {}
+
+    void update(const uint64_t time)
+    {
+        if (IsKeyDown(VK_LEFT))
+        {
+            x -= 7.0f;
+        }
+        else if (IsKeyDown(VK_RIGHT))
+        {
+            x += 7.0f;
+        }
+
+        x = max(size, min(800.0f - size, x));
+        DrawSprite(sprite, x, y, size, size, PI + sin(time * 0.1f) * 0.1f, 0xffffffff);
+    }
+
+    float getX() const
+    {
+        return x;
+    }
+
+    float getY() const
+    {
+        return y;
+    }
+
+    void* getSprite()
+    {
+        return sprite;
+    }
+
+private:
+    float x;
+    float y;
+    float size;
+    void* sprite;
+};
+
+class Bullet
+{
+public:
+    Bullet() :
+        Bullet(0.0f, 0.0f, nullptr)
+    {}
+
+    Bullet(const float x, const float y, void* sprite) :
+        x(x),
+        y(y),
+        angle(0.0f),
+        timeToLive(8'000),
+        sprite(sprite)
+    {}
+
+    void update(const int deltaTime)
+    {
+        timeToLive -= deltaTime;
+        y -= 4.0f;
+        angle += 0.1f;
+    }
+
+    bool isExpired() const
+    {
+        return timeToLive <= 0;
+    }
+
+    float getX() const
+    {
+        return x;
+    }
+
+    float getY() const
+    {
+        return y;
+    }
+
+    float getAngle() const
+    {
+        return angle;
+    }
+
+    void* getSprite()
+    {
+        return sprite;
+    }
+
+public:
+    float x;
+    float y;
+    float angle;
+    int timeToLive;
+    void* sprite;
+};
 
 int x[50];
 int y[50];
-int time=0;
+std::list<Bullet> activeBullets;
 
-struct bullet
+void updateBullets(const uint64_t deltaTime)
 {
-	float BX,BY,BA;
-	bullet() {BX=BY=BA=0;}
-};
+    for (auto iterator = activeBullets.begin(); iterator != activeBullets.end();)
+    {
+        iterator->update(int(deltaTime));
 
-bullet bullets[10];
+        if (iterator->isExpired())
+        {
+            iterator = activeBullets.erase(iterator);
+        }
+        else
+        {
+            DrawSprite(iterator->getSprite(), iterator->getX(), iterator->getY(), 10.0f, 10.0f, iterator->getAngle(), 0xffffffff);
+            ++iterator;
+        }
+    }
+}
 
 void Game()
 {
@@ -34,46 +176,64 @@ void Game()
 	};
 
 	// SETUP
-	int UX=400, UY=550;
+    uint64_t time = 0;
+    uint64_t updateTimer = 0;
 	void *Enemy = LoadSprite("gfx/Little Invader.png");
-	void *U = LoadSprite("gfx/Big Invader.png");
-	void *bull = LoadSprite("gfx/bullet.png");
+	void* playerSprite = LoadSprite("gfx/Big Invader.png");
+	void* bulletSprite = LoadSprite("gfx/bullet.png");
 	for(int n=0;n<50;++n)
 	{
 		x[n]=(n%10)*60+120;
 		y[n]=(n/10)*60+70;
 	}
 
+    PlayerShip player(playerSprite);
+    Timer timer;
     while (!WantQuit() && !IsKeyDown(VK_ESCAPE))
     {
         time++;
+        updateTimer += timer.getElapsedTimeInMilliseconds();
+
 	    for (int n = 0; n < 50; ++n)
 	    {
             int xo = 0;
             int yo = 0;
-		    int n1 = time + n*n + n*n*n;
-		    int n2 = time + n+ n*n + 3*n*n*n;
-		    if(((n1>>6)&0x7)==0x7)xo+=(1-cos((n1&0x7f)/64.0f*2.f*3.141592))*(20+((n*n)%9));
-		    if(((n1>>6)&0x7)==0x7)yo+=(sin((n1&0x7f)/64.0f*2.f*3.141592))*(20+((n*n)%9));
-		    if(((n2>>8)&0xf)==0xf)yo+=(1-cos((n2&0xff)/256.0f*2.f*3.141592))*(150+((n*n)%9));
-		    DrawSprite(Enemy, x[n]+xo, y[n]+yo, (10+((n)%17)), (10+((n)%17)), 0, 0xffffffff);
+		    int n1 = int(time) + n*n + n*n*n;
+		    int n2 = int(time) + n+ n*n + 3*n*n*n;
+		    if(((n1>>6)&0x7)==0x7)xo+=(1-cos((n1&0x7f)/64.0f*2.f*PI))*(20+((n*n)%9));
+		    if(((n1>>6)&0x7)==0x7)yo+=(sin((n1&0x7f)/64.0f*2.f*PI))*(20+((n*n)%9));
+		    if(((n2>>8)&0xf)==0xf)yo+=(1-cos((n2&0xff)/256.0f*2.f*PI))*(150+((n*n)%9));
+		    DrawSprite(Enemy, (float)(x[n]+xo), (float)(y[n]+yo), (float)(10+((n)%17)), (float)(10+((n)%17)), 0, 0xffffffff);
 	    }
-	
-	    DrawSprite(U, UX+=IsKeyDown(VK_LEFT)?-7:IsKeyDown(VK_RIGHT)?7:0, UY, 50, 50, 3.141592+sin(time*0.1)*0.1, 0xffffffff);
+	    
+        player.update(time);
 
 	    // FIRE
-	    static int b=0;
-	    static int count=0;
-	    if(count) --count;
-	    if(!IsKeyDown(VK_SPACE)) count=0;
-	    if(IsKeyDown(VK_SPACE) && count==0) {bullets[b].BX=UX; bullets[b].BY=UY; b=(b+1)%10; count=15;}
+	    static int bulletCooldown = 0;
+        if (bulletCooldown > 0)
+        {
+            bulletCooldown--;
+        }
+        if (!IsKeyDown(VK_SPACE))
+        {
+            bulletCooldown = 0;
+        }
+	    if (IsKeyDown(VK_SPACE) && bulletCooldown == 0)
+        {
+            activeBullets.push_back(Bullet(player.getX(), player.getY(), bulletSprite));
+            bulletCooldown = 15;
+        }
 
-	    for (int n=0;n<10;++n)
-	    {
-		    DrawSprite(bull, bullets[n].BX, bullets[n].BY-=4, 10, 10, bullets[n].BA+=0.1f, 0xffffffff);
-	    }
+        updateBullets(updateTimer);
+        updateTimer = 0;
 
-	    for(int n=0;n<strlen("space invaders");++n) if(n!=5)DrawSprite(Text[n], n*40+150,30,20,20,sin(time*0.1)*n*0.01);
+        for (int n = 0; n < (int)strlen("space invaders"); ++n)
+        {
+            if (n != 5)
+            {
+                DrawSprite(Text[n], float(n * 40 + 150), 30.0f, 20.0f, 20.0f, float((sin(time * 0.1f) * n * 0.01f)));
+            }
+        }
 
 	    Flip();
     }

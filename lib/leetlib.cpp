@@ -20,10 +20,12 @@
 #include <map>
 #include <direct.h>
 #include <malloc.h>
+#include <ios>
+#include <io.h>
+#include <fcntl.h>
 //#include "resource.h"
 
 //#include "joypad.h"
-
 
 #include "fmod/api/inc/fmod.h"
 #pragma comment(lib,"lib/fmod/api/lib/fmodvc.lib")
@@ -575,7 +577,7 @@ LRESULT WINAPI MsgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 		if( WA_INACTIVE != wParam )
 		{
 			// Make sure the device is acquired, if we are gaining focus.
-			
+
 		}
 		break;
     }
@@ -619,6 +621,18 @@ AdjustWindowRect(&r,style,false);
 
 	QueryPerformanceCounter(&starttime);
 	QueryPerformanceFrequency(&freq);
+
+    // Debug console
+    AllocConsole();
+    SetConsoleTitleA("ConsoleTitle");
+    typedef struct { char* _ptr; int _cnt; char* _base; int _flag; int _file; int _charbuf; int _bufsiz; char* _tmpfname; } FILE_COMPLETE;
+    *(FILE_COMPLETE*)stdout = *(FILE_COMPLETE*)_fdopen(_open_osfhandle((long)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT), "w");
+    *(FILE_COMPLETE*)stderr = *(FILE_COMPLETE*)_fdopen(_open_osfhandle((long)GetStdHandle(STD_ERROR_HANDLE), _O_TEXT), "w");
+    *(FILE_COMPLETE*)stdin = *(FILE_COMPLETE*)_fdopen(_open_osfhandle((long)GetStdHandle(STD_INPUT_HANDLE), _O_TEXT), "r");
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
+    setvbuf(stdin, NULL, _IONBF, 0);
+
     // Initialize Direct3D
     if( SUCCEEDED( InitD3D( hWnd ) ) )
     {
@@ -639,6 +653,7 @@ AdjustWindowRect(&r,style,false);
     }
 
     UnregisterClass( "crapcrap", wc.hInstance );
+    Cleanup();
     return 0;
 }
 
