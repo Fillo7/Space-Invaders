@@ -731,7 +731,7 @@ void Flip()
 
 
 
-void GetMousePos(float &x, float &y) // 0,0 is top left; 800,600 is bottom right
+void GetMousePosition(float &x, float &y) // 0,0 is top left; 800,600 is bottom right
 {
 	POINT p;
 	GetCursorPos(&p);
@@ -798,129 +798,67 @@ void DrawSprite(void *sprite, float xcentre, float ycentre, float xsize, float y
 	g_pd3dDevice->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, tea2, sizeof(CUSTOMVERTEX));
 }
 
-/*
-// 'flat colour' output
-void DrawLine(float x1, float y1, float x2, float y2, DWORD col ) // no texture
+FSOUND_STREAM* music;
+
+int PlayMusic(const std::string& filename, float volume)
 {
-	IDirect3DBaseTexture9 *oldtex = NULL;
-	g_pd3dDevice->GetTexture(0, &oldtex);
-	g_pd3dDevice->SetTexture(0, NULL);
-	CUSTOMVERTEX tea2[] =
-	{
-		{ x1, y1, 0.5f, 1.0f, col, 0,0, }, // x, y, z, rhw, color
-		{ x2, y2, 0.5f, 1.0f, col, 1,0, }
-	};
-	g_pd3dDevice->DrawPrimitiveUP(D3DPT_LINELIST, 1, tea2, sizeof(CUSTOMVERTEX));
-
-	g_pd3dDevice->SetTexture(0, oldtex);
-}
-
-void DrawTriangle(float x1, float y1, float x2, float y2, float x3, float y3, DWORD col ) // flat colored tri, no texture
-{
-	IDirect3DBaseTexture9 *oldtex = NULL;
-	g_pd3dDevice->GetTexture(0, &oldtex);
-	g_pd3dDevice->SetTexture(0, NULL);
-	CUSTOMVERTEX tea2[] =
-	{
-		{ x1, y1, 0.5f, 1.0f, col, 0,0, }, // x, y, z, rhw, color
-		{ x2, y2, 0.5f, 1.0f, col, 1,0, },
-		{ x3, y3, 0.5f, 1.0f, col, 1,0, }
-	};
-	g_pd3dDevice->DrawPrimitiveUP(D3DPT_TRIANGLELIST, 1, tea2, sizeof(CUSTOMVERTEX));
-
-	g_pd3dDevice->SetTexture(0, oldtex);
-}
-
-
-// 'advanced' output - for geeks only - for drawing arbitrarily textured triangles and line lists
-void DrawTriangleList(Vertex *verts, int numtris)
-{
-	CUSTOMVERTEX *vs = (CUSTOMVERTEX *)alloca(sizeof(CUSTOMVERTEX) * numtris * 3);
-	CUSTOMVERTEX *d=vs;
-	for (int n=0;n<numtris*3;n++)
-	{
-		d->x=verts->x;
-		d->y=verts->y;
-		d->z=0.5;
-		d->rhw=1;
-		d->color=verts->colour;
-		d->u=verts->u;
-		d->v=verts->v;
-		d++;
-		verts++;
-	}
-	g_pd3dDevice->DrawPrimitiveUP(D3DPT_TRIANGLELIST, numtris, vs, sizeof(CUSTOMVERTEX));
-}
-
-void DrawLineList(Vertex *verts, int numlines)
-{
-	CUSTOMVERTEX *vs = (CUSTOMVERTEX *)alloca(sizeof(CUSTOMVERTEX) * numlines * 2);
-	CUSTOMVERTEX *d=vs;
-	for (int n=0;n<numlines * 2;n++)
-	{
-		d->x=verts->x;
-		d->y=verts->y;
-		d->z=0.5;
-		d->rhw=1;
-		d->color=verts->colour;
-		d->u=verts->u;
-		d->v=verts->v;
-		d++;
-		verts++;
-	}
-	g_pd3dDevice->DrawPrimitiveUP(D3DPT_LINELIST, numlines, vs, sizeof(CUSTOMVERTEX));
-}
-*/
-
-FSOUND_STREAM *music;
-
-int PlayMusic(const char *fname, float volume)
-{
-	if (music) StopMusic();
-	music = FSOUND_Stream_Open(fname,FSOUND_LOOP_NORMAL,0,0);
-	int chan = FSOUND_Stream_Play(FSOUND_FREE,music);
-	if (volume<=0) volume=0;
-	if (volume>1) volume=1;
-	FSOUND_SetVolume(chan, (int)(volume*255));
-	return chan;
+    if (music != nullptr)
+    {
+        StopMusic();
+    }
+    music = FSOUND_Stream_Open(&filename[0], FSOUND_LOOP_NORMAL, 0, 0);
+    int channel = FSOUND_Stream_Play(FSOUND_FREE, music);
+    volume = max(0.0f, min(1.0f, volume));
+    FSOUND_SetVolume(channel, int(volume * 255));
+    return channel;
 }
 
 void StopMusic()
 {
-	if (music)
-	{
-		FSOUND_Stream_Close(music);
-	}
-	music=NULL;
+    if (music != nullptr)
+    {
+        FSOUND_Stream_Close(music);
+    }
+    music=NULL;
 }
 
-void *LoadSnd(const char *fname, bool looped)
+void *LoadSnd(const std::string& filename, bool looped)
 {
-	int flags=0;
-	if (looped) flags|=FSOUND_LOOP_NORMAL;
-	return FSOUND_Sample_Load(FSOUND_FREE,fname,flags,0,0);
+    int flags = 0;
+    if (looped)
+    {
+        flags |= FSOUND_LOOP_NORMAL;
+    }
+    return FSOUND_Sample_Load(FSOUND_FREE, &filename[0], flags, 0, 0);
 }
 
-int PlaySnd(void *sound, float volume)
+int PlaySnd(void* sound, float volume)
 {
-	if (!sound) return -1;
-	if (volume<=0) volume=0;
-	if (volume>1) volume=1;
-	int chan = FSOUND_PlaySound(FSOUND_FREE,(FSOUND_SAMPLE*)sound);
-	FSOUND_SetVolume(chan, (int)(volume*255));
-	return chan;
+    if (sound == nullptr)
+    {
+        return -1;
+    }
+    volume = max(0.0f, min(1.0f, volume));
+    int channel = FSOUND_PlaySound(FSOUND_FREE, (FSOUND_SAMPLE*)sound);
+    FSOUND_SetVolume(channel, int(volume * 255));
+    return channel;
 }
 
 void StopSnd(int handle)
 {
-	if (handle<=0) return ;
-	FSOUND_StopSound(handle);
+    if (handle <= 0)
+    {
+        return;
+    }
+    FSOUND_StopSound(handle);
 }
 
 void ChangeVolume(int handle, float volume)
 {
-	if (handle<=0) return ;
-	if (volume<=0) volume=0;
-	if (volume>1) volume=1;
-	FSOUND_SetVolume(handle, (int)(volume*255));
+    if (handle <= 0)
+    {
+        return;
+    }
+    volume = max(0.0f, min(1.0f, volume));
+    FSOUND_SetVolume(handle, int(volume * 255));
 }

@@ -94,6 +94,9 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="entities\bullet.h" />
+    <ClInclude Include="entities\enemy.h" />
+    <ClInclude Include="entities\player.h" />
     <ClInclude Include="lib\leetlib.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
