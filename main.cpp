@@ -77,7 +77,7 @@ void Game()
 
     for (int i = 0; i < 50; i++)
     {
-        enemies[i].initialize((i % 10) * 60.0f + 120.0f, (i / 10) * 60.0f + 70.0f, float((10 + (i % 17))), enemySprite, i);
+        enemies[i].initialize((i % 10) * 60.0f + 120.0f, (i / 10) * 60.0f + 70.0f, float((10 + (i % 17))), enemySprite, i, &player);
     }
 
     // Game loop
