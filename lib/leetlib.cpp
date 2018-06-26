@@ -647,7 +647,6 @@ AdjustWindowRect(&r,style,false);
             UpdateWindow( hWnd );
 
 			//InitDirectInput( hWnd );			
-			
             Game();
         }
     }
@@ -753,10 +752,10 @@ bool IsKeyDown(int key) // use windows VK_ codes for special keys, eg VK_LEFT; u
 */
 
 // 'sprite output' 
-void *LoadSprite(const char *fname)
+void* LoadSprite(const std::string& filename)
 {
 	IDirect3DTexture9 *tex = NULL;
-	D3DXCreateTextureFromFile(g_pd3dDevice,fname,&tex);
+	D3DXCreateTextureFromFile(g_pd3dDevice,&filename[0],&tex);
 	return tex;
 }
 

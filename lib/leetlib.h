@@ -1,10 +1,10 @@
 #pragma once
 
+#include <string>
 #include <windows.h>
 
-typedef unsigned long DWORD;
-
-#define PI 3.1415926535f
+using DWORD = unsigned long;
+const float PI = 3.1415926535f;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 'system' - screen is always 800 x 600
@@ -22,7 +22,7 @@ bool IsKeyDown(int key); // use windows VK_ codes for special keys, eg VK_LEFT; 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // output
 // 'sprite output' 
-void *LoadSprite(const char *fname);
+void *LoadSprite(const std::string& filename);
 void DrawSprite(void *sprite, float xcentre, float ycentre, float xsize, float ysize, float rotate_angle_radians=0, DWORD tint_col_argb = 0xffffffff);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
