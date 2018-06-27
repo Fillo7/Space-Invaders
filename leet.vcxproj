@@ -92,12 +92,14 @@
   <ItemGroup>
     <ClCompile Include="lib\leetlib.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="utility\utility.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="entities\bullet.h" />
     <ClInclude Include="entities\enemy.h" />
     <ClInclude Include="entities\player.h" />
     <ClInclude Include="lib\leetlib.h" />
+    <ClInclude Include="utility\utility.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

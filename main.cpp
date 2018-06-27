@@ -1,15 +1,18 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
-#include <fstream>
 #include <list>
 #include <map>
-#include <sstream>
+#include <random>
 #include <string>
+#include <vector>
 #include "lib/leetlib.h"
 #include "entities/bullet.h"
 #include "entities/enemy.h"
 #include "entities/player.h"
+#include "utility/utility.h"
+
+using namespace Invaders;
 
 uint32_t updateEnemies(std::array<Enemy, 50>& enemies, const uint32_t currentTime)
 {
@@ -26,6 +29,38 @@ uint32_t updateEnemies(std::array<Enemy, 50>& enemies, const uint32_t currentTim
     }
 
     return defeatedCount;
+}
+
+void enrageEnemy(std::array<Enemy, 50>& enemies, const uint32_t currentTime)
+{
+    std::vector<Enemy*> enrageCandidates;
+
+    for (int i = 0; i < int(enemies.size()); i++)
+    {
+        if (enemies[i].isActive() && !enemies[i].isTransitioning() && !enemies[i].isEnraged())
+        {
+            enrageCandidates.push_back(&enemies[i]);
+        }
+    }
+
+    if (enrageCandidates.size() == 0)
+    {
+        return;
+    }
+
+    float currentTimeFloat = float(currentTime / SECOND_DURATION);
+    float twoMinutes = 120.0f;
+    float enragedSpeed = 2.0f + (4.0f * min(1.0f, currentTimeFloat / twoMinutes));
+
+    if (enrageCandidates.size() == 1)
+    {
+        enrageCandidates[0]->enrage(enragedSpeed);
+    }
+    else
+    {
+        int enrageIndex = currentTime % enrageCandidates.size();
+        enrageCandidates[enrageIndex]->enrage(enragedSpeed);
+    }
 }
 
 void updateBullets(std::list<Bullet>& activeBullets, const uint32_t currentTime)
@@ -45,123 +80,6 @@ void updateBullets(std::list<Bullet>& activeBullets, const uint32_t currentTime)
     }
 }
 
-void drawText(const std::string& text, const std::map<std::string, void*>& spriteMap, const uint32_t time, const int gap, const float size,
-    const float xOffset, const float yOffset, const bool enableRotation)
-{
-    for (int i = 0; i < int(text.length()); i++)
-    {
-        if (i == gap)
-        {
-            continue;
-        }
-
-        float rotation = 0.0f;
-        if (enableRotation)
-        {
-            rotation = float((sin(time * 0.1f) * i * 0.01f));
-        }
-        DrawSprite(spriteMap.find(std::string("") + text[i])->second, float(i * 2 * size + xOffset), yOffset, size, size, rotation);
-    }
-}
-
-std::map<std::string, void*> getSpriteMap()
-{
-    std::map<std::string, void*> result;
-
-    void* enemySprite = LoadSprite("gfx/Little Invader.png");
-    result.insert(std::make_pair("enemy", enemySprite));
-
-    void* playerSprite = LoadSprite("gfx/Big Invader.png");
-    result.insert(std::make_pair("player", playerSprite));
-
-    void* bulletSprite = LoadSprite("gfx/bullet.png");
-    result.insert(std::make_pair("bullet", bulletSprite));
-
-    for (char c = 'a'; int(c) <= int('z'); c++)
-    {
-        void* letterSprite = LoadSprite(std::string("gfx/") + c + "let.png");
-        result.insert(std::make_pair(std::string("") + c, letterSprite));
-    }
-
-    for (char c = '0'; int(c) <= int('9'); c++)
-    {
-        void* numberSprite = LoadSprite(std::string("gfx/num") + c + ".png");
-        result.insert(std::make_pair(std::string("") + c, numberSprite));
-    }
-
-    return result;
-}
-
-uint32_t loadHighScore(const std::string& filename)
-{
-    std::ifstream inputFile(filename, std::ios_base::in);
-
-    if (!inputFile.is_open())
-    {
-        return 0;
-    }
-
-    std::stringstream stream;
-    stream << inputFile.rdbuf();
-    uint32_t result = std::stoul(stream.str());
-    return result;
-}
-
-void saveHighScore(const std::string& filename, const uint32_t highScore)
-{
-    std::ofstream outputFile(filename, std::ios::trunc | std::ios_base::out);
-
-    if (!outputFile.is_open())
-    {
-        return;
-    }
-    outputFile << highScore << std::endl;
-}
-
-uint32_t getBonusScore(const uint32_t time)
-{
-    uint32_t timeInSeconds = time / SECOND_DURATION;
-    uint32_t fiveMinutes = 300;
-
-    if (timeInSeconds > fiveMinutes)
-    {
-        return 0;
-    }
-    else
-    {
-        return fiveMinutes - timeInSeconds;
-    }
-}
-
-uint32_t getCurrentScore(const std::array<Enemy, 50>& enemies, const uint32_t time, const bool includeTimeBonus)
-{
-    uint32_t result = 0;
-
-    for (int i = 0; i < int(enemies.size()); i++)
-    {
-        if (enemies[i].isActive())
-        {
-            continue;
-        }
-
-        if (enemies[i].isEnraged())
-        {
-            result += 20;
-        }
-        else
-        {
-            result += 10;
-        }
-    }
-
-    if (includeTimeBonus)
-    {
-        result += getBonusScore(time);
-    }
-
-    return result;
-}
-
 void Game()
 {
     // Setup
@@ -169,6 +87,11 @@ void Game()
     void* enemySprite = spriteMap.find("enemy")->second;
     void* playerSprite = spriteMap.find("player")->second;
     void* bulletSprite = spriteMap.find("bullet")->second;
+
+    std::random_device device;
+    std::default_random_engine engine(device());
+    std::uniform_int_distribution<int> distribution(3 * SECOND_DURATION, 6 * SECOND_DURATION);
+    int enrageTimer = distribution(engine);
 
     bool victory = false;
     uint32_t highScore = loadHighScore("highscore.score");
@@ -188,6 +111,7 @@ void Game()
     while (!WantQuit() && !IsKeyDown(VK_ESCAPE))
     {
         time++;
+        enrageTimer--;
 
         // Update movement, AI and collisions
         player.update(time);
@@ -196,13 +120,16 @@ void Game()
             activeBullets.emplace_back(player.getX(), player.getY(), bulletSprite, time, &enemies);
         }
 
-        uint32_t defeatedCount = updateEnemies(enemies, time);
-        if (defeatedCount == enemies.size())
+        if (enrageTimer <= 0)
         {
-            if (victoryTime == 0)
-            {
-                victoryTime = time;
-            }
+            enrageEnemy(enemies, time);
+            enrageTimer = distribution(engine);
+        }
+
+        uint32_t defeatedCount = updateEnemies(enemies, time);
+        if (!victory && defeatedCount == enemies.size())
+        {
+            victoryTime = time;
             victory = true;
         }
         updateBullets(activeBullets, time);

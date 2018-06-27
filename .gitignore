@@ -3,7 +3,6 @@ Backup
 Debug
 Release
 
-*.filters
 *.user
 *.score
 

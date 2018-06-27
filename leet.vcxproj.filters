@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="lib\leetlib.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="utility\utility.cpp">
+      <Filter>utility</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="lib\leetlib.h" />
+    <ClInclude Include="entities\bullet.h">
+      <Filter>entities</Filter>
+    </ClInclude>
+    <ClInclude Include="entities\player.h">
+      <Filter>entities</Filter>
+    </ClInclude>
+    <ClInclude Include="entities\enemy.h">
+      <Filter>entities</Filter>
+    </ClInclude>
+    <ClInclude Include="utility\utility.h">
+      <Filter>utility</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="entities">
+      <UniqueIdentifier>{04280ed7-d3c6-4307-ab54-d51080d03386}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utility">
+      <UniqueIdentifier>{18e6264d-2beb-400f-ba2a-846e22e1274e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

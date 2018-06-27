@@ -4,6 +4,9 @@
 #include "../lib/leetlib.h"
 #include "player.h"
 
+namespace Invaders
+{
+
 // Enemy class represents an enemy. Handles movement, status, AI and collisions between enemy and player.
 // Enemy collider is implemented as a rectangle.
 class Enemy
@@ -100,6 +103,12 @@ public:
         return enraged;
     }
 
+    bool isTransitioning() const
+    {
+        float distanceFromSpawn = sqrtf(xo * xo + yo * yo);
+        return distanceFromSpawn > 20.0f;
+    }
+
 private:
     float x;
     float y;
@@ -180,3 +189,5 @@ private:
         return false;
     }
 };
+
+} // namespace Invaders

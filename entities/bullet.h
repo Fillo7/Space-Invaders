@@ -4,6 +4,9 @@
 #include "../lib/leetlib.h"
 #include "enemy.h"
 
+namespace Invaders
+{
+
 // Bullet class represents a bullet shot by a player. Handles bullet movement, status and collisions between bullet and enemies.
 // Bullet collider is implemented as a circle.
 class Bullet
@@ -132,3 +135,5 @@ private:
         return distanceSquared < (radius * radius);
     }
 };
+
+} // namespace Invaders

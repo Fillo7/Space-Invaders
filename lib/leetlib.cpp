@@ -377,7 +377,7 @@ void StopMusic()
     music = nullptr;
 }
 
-void *LoadSnd(const std::string& filename, bool looped)
+void* LoadSnd(const std::string& filename, bool looped)
 {
     int flags = 0;
     if (looped)

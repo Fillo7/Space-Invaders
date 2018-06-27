@@ -3,6 +3,9 @@
 #include <cstdint>
 #include "../lib/leetlib.h"
 
+namespace Invaders
+{
+
 // Player class represents a player spaceship. Handles movement, status and shooting.
 // Player collider is implemented as a rectangle.
 class Player
@@ -98,3 +101,5 @@ private:
     bool active;
     mutable int bulletCooldown;
 };
+
+} // namespace Invaders
