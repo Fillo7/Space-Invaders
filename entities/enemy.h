@@ -4,6 +4,8 @@
 #include "../lib/leetlib.h"
 #include "player.h"
 
+// Enemy class represents an enemy. Handles movement, status, AI and collisions between enemy and player.
+// Enemy collider is implemented as a rectangle.
 class Enemy
 {
 public:
@@ -16,7 +18,8 @@ public:
         sprite(nullptr),
         order(0),
         active(true),
-        enraged(false)
+        enraged(false),
+        enragedSpeed(1.0f)
     {}
 
     void update(const uint32_t currentTime)
@@ -56,13 +59,14 @@ public:
         active = false;
     }
 
-    void enrage()
+    void enrage(const float enragedSpeed)
     {
         x = getX();
         y = getY();
         xo = 0.0f;
         yo = 0.0f;
 
+        this->enragedSpeed = enragedSpeed;
         this->enraged = true;
     }
 
@@ -91,6 +95,11 @@ public:
         return active;
     }
 
+    bool isEnraged() const
+    {
+        return enraged;
+    }
+
 private:
     float x;
     float y;
@@ -101,6 +110,7 @@ private:
     int order;
     bool active;
     bool enraged;
+    float enragedSpeed;
     Player* player;
 
     void magicAI(const uint32_t currentTime)
@@ -128,11 +138,28 @@ private:
 
     void enragedAI()
     {
-        // todo
+        // Move closer to player
+        if (player->isActive())
+        {
+            float u = player->getX() - x;
+            float v = player->getY() - y;
+
+            // Normalize movement vector
+            float length = sqrtf(u * u + v * v);
+            if (length != 0.0f)
+            {
+                u /= length;
+                v /= length;
+            }
+
+            x += u * enragedSpeed;
+            y += v * enragedSpeed;
+        }
+
         DrawSprite(sprite, x, y, float((10 + (order % 17))), float((10 + (order % 17))), 0.0f, 0xffff0000);
     }
 
-    // Checks for collision between enemy and player. Both enemy and player colliders are implemented as rectangles.
+    // Checks for collision between an enemy and a player. Both enemy and player colliders are implemented as rectangles.
     bool intersectsPlayer() const
     {
         float enemyLeft = getX() - size / 2.0f;

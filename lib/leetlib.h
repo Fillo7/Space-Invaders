@@ -1,5 +1,7 @@
 #pragma once
 
+#define _CRT_SECURE_NO_WARNINGS
+#include <cstdint>
 #include <string>
 #include <windows.h>
 
@@ -7,7 +9,7 @@
 // Constants and utility functions.
 
 // Duration of one second in frames.
-const int SECOND_DURATION = 60;
+const uint32_t SECOND_DURATION = 60;
 
 // Value of Pi.
 const float PI = 3.1415926535f;
@@ -44,7 +46,7 @@ void GetMousePosition(float& x, float& y);
 bool IsKeyDown(int key); 
 
 //*************************************************************************************************************************************************//
-// Output
+// Sprites drawing
 
 // Loads sprite from file.
 void* LoadSprite(const std::string& filename);

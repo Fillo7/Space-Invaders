@@ -1,8 +1,11 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <fstream>
 #include <list>
 #include <map>
+#include <sstream>
+#include <string>
 #include "lib/leetlib.h"
 #include "entities/bullet.h"
 #include "entities/enemy.h"
@@ -89,6 +92,76 @@ std::map<std::string, void*> getSpriteMap()
     return result;
 }
 
+uint32_t loadHighScore(const std::string& filename)
+{
+    std::ifstream inputFile(filename, std::ios_base::in);
+
+    if (!inputFile.is_open())
+    {
+        return 0;
+    }
+
+    std::stringstream stream;
+    stream << inputFile.rdbuf();
+    uint32_t result = std::stoul(stream.str());
+    return result;
+}
+
+void saveHighScore(const std::string& filename, const uint32_t highScore)
+{
+    std::ofstream outputFile(filename, std::ios::trunc | std::ios_base::out);
+
+    if (!outputFile.is_open())
+    {
+        return;
+    }
+    outputFile << highScore << std::endl;
+}
+
+uint32_t getBonusScore(const uint32_t time)
+{
+    uint32_t timeInSeconds = time / SECOND_DURATION;
+    uint32_t fiveMinutes = 300;
+
+    if (timeInSeconds > fiveMinutes)
+    {
+        return 0;
+    }
+    else
+    {
+        return fiveMinutes - timeInSeconds;
+    }
+}
+
+uint32_t getCurrentScore(const std::array<Enemy, 50>& enemies, const uint32_t time, const bool includeTimeBonus)
+{
+    uint32_t result = 0;
+
+    for (int i = 0; i < int(enemies.size()); i++)
+    {
+        if (enemies[i].isActive())
+        {
+            continue;
+        }
+
+        if (enemies[i].isEnraged())
+        {
+            result += 20;
+        }
+        else
+        {
+            result += 10;
+        }
+    }
+
+    if (includeTimeBonus)
+    {
+        result += getBonusScore(time);
+    }
+
+    return result;
+}
+
 void Game()
 {
     // Setup
@@ -98,7 +171,10 @@ void Game()
     void* bulletSprite = spriteMap.find("bullet")->second;
 
     bool victory = false;
+    uint32_t highScore = loadHighScore("highscore.score");
     uint32_t time = 0;
+    uint32_t victoryTime = 0;
+
     Player player(playerSprite);
     std::list<Bullet> activeBullets;
     std::array<Enemy, 50> enemies;
@@ -108,7 +184,7 @@ void Game()
         enemies[i].initialize((i % 10) * 60.0f + 120.0f, (i / 10) * 60.0f + 70.0f, float((10 + (i % 17))), enemySprite, i, &player);
     }
 
-    // Game loop
+    // Main game loop
     while (!WantQuit() && !IsKeyDown(VK_ESCAPE))
     {
         time++;
@@ -123,14 +199,16 @@ void Game()
         uint32_t defeatedCount = updateEnemies(enemies, time);
         if (defeatedCount == enemies.size())
         {
+            if (victoryTime == 0)
+            {
+                victoryTime = time;
+            }
             victory = true;
         }
         updateBullets(activeBullets, time);
 
-        // Title text
+        // Title and ending texts
         drawText("space invaders", spriteMap, time, 5, 20.0f, 150.0f, 30.0f, true);
-
-        // Ending text
         if (!player.isActive())
         {
             drawText("game over", spriteMap, time, 4, 30.0f, 165.0f, 300.0f, false);
@@ -140,6 +218,27 @@ void Game()
             drawText("victory", spriteMap, time, -1, 30.0f, 215.0f, 300.0f, false);
         }
 
+        // Score calculation and text
+        uint32_t score;
+        if (victory)
+        {
+            score = getCurrentScore(enemies, victoryTime, true);
+        }
+        else
+        {
+            score = getCurrentScore(enemies, 0, false);
+        }
+
+        if (score > highScore)
+        {
+            highScore = score;
+        }
+
+        drawText("score " + std::to_string(score), spriteMap, time, 5, 8.0f, 615.0f, 520.0f, false);
+        drawText("highscore " + std::to_string(highScore), spriteMap, time, 9, 8.0f, 550.0f, 560.0f, false);
+
         Flip();
     }
+
+    saveHighScore("highscore.score", highScore);
 }

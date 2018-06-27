@@ -3,6 +3,8 @@
 #include <cstdint>
 #include "../lib/leetlib.h"
 
+// Player class represents a player spaceship. Handles movement, status and shooting.
+// Player collider is implemented as a rectangle.
 class Player
 {
 public:

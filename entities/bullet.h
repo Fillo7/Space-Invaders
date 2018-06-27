@@ -4,6 +4,8 @@
 #include "../lib/leetlib.h"
 #include "enemy.h"
 
+// Bullet class represents a bullet shot by a player. Handles bullet movement, status and collisions between bullet and enemies.
+// Bullet collider is implemented as a circle.
 class Bullet
 {
 public:
@@ -105,7 +107,7 @@ private:
     bool active;
     std::array<Enemy, 50>* enemies;
 
-    // Checks for collision between bullet and enemy. Bullet collider is implemented as circle, enemy collider is implemented as rectangle.
+    // Checks for collision between a bullet and an enemy. Bullet collider is implemented as a circle, enemy collider is implemented as a rectangle.
     bool intersectsEnemy(const Enemy& enemy) const
     {
         float enemyLeft = enemy.getX() - enemy.getSize() / 2.0f;
