@@ -8,12 +8,21 @@
 #include "entities/enemy.h"
 #include "entities/player.h"
 
-void updateEnemies(std::array<Enemy, 50>& enemies, const uint32_t currentTime)
+uint32_t updateEnemies(std::array<Enemy, 50>& enemies, const uint32_t currentTime)
 {
-    for (int i = 0; i < 50; i++)
+    uint32_t defeatedCount = 0;
+
+    for (int i = 0; i < int(enemies.size()); i++)
     {
         enemies[i].update(currentTime);
+
+        if (!enemies[i].isActive())
+        {
+            defeatedCount++;
+        }
     }
+
+    return defeatedCount;
 }
 
 void updateBullets(std::list<Bullet>& activeBullets, const uint32_t currentTime)
@@ -30,6 +39,25 @@ void updateBullets(std::list<Bullet>& activeBullets, const uint32_t currentTime)
         {
             ++iterator;
         }
+    }
+}
+
+void drawText(const std::string& text, const std::map<std::string, void*>& spriteMap, const uint32_t time, const int gap, const float size,
+    const float xOffset, const float yOffset, const bool enableRotation)
+{
+    for (int i = 0; i < int(text.length()); i++)
+    {
+        if (i == gap)
+        {
+            continue;
+        }
+
+        float rotation = 0.0f;
+        if (enableRotation)
+        {
+            rotation = float((sin(time * 0.1f) * i * 0.01f));
+        }
+        DrawSprite(spriteMap.find(std::string("") + text[i])->second, float(i * 2 * size + xOffset), yOffset, size, size, rotation);
     }
 }
 
@@ -68,14 +96,14 @@ void Game()
     void* enemySprite = spriteMap.find("enemy")->second;
     void* playerSprite = spriteMap.find("player")->second;
     void* bulletSprite = spriteMap.find("bullet")->second;
-    const std::string titleString("space invaders");
 
+    bool victory = false;
     uint32_t time = 0;
     Player player(playerSprite);
     std::list<Bullet> activeBullets;
     std::array<Enemy, 50> enemies;
 
-    for (int i = 0; i < 50; i++)
+    for (int i = 0; i < int(enemies.size()); i++)
     {
         enemies[i].initialize((i % 10) * 60.0f + 120.0f, (i / 10) * 60.0f + 70.0f, float((10 + (i % 17))), enemySprite, i, &player);
     }
@@ -87,32 +115,29 @@ void Game()
 
         // Update movement, AI and collisions
         player.update(time);
-        updateEnemies(enemies, time);
+        if (player.isShooting())
+        {
+            activeBullets.emplace_back(player.getX(), player.getY(), bulletSprite, time, &enemies);
+        }
+
+        uint32_t defeatedCount = updateEnemies(enemies, time);
+        if (defeatedCount == enemies.size())
+        {
+            victory = true;
+        }
         updateBullets(activeBullets, time);
 
-        // Player fire
-        static int bulletCooldown = 0;
-        if (bulletCooldown > 0)
-        {
-            bulletCooldown--;
-        }
-        if (!IsKeyDown(VK_SPACE))
-        {
-            bulletCooldown = 0;
-        }
-        if (IsKeyDown(VK_SPACE) && bulletCooldown == 0)
-        {
-            activeBullets.emplace_back(player.getX(), player.getY(), bulletSprite, time);
-            bulletCooldown = 15;
-        }
-
         // Title text
-        for (int i = 0; i < int(titleString.length()); i++)
+        drawText("space invaders", spriteMap, time, 5, 20.0f, 150.0f, 30.0f, true);
+
+        // Ending text
+        if (!player.isActive())
         {
-            if (i != 5)
-            {
-                DrawSprite(spriteMap.find(std::string("") + titleString[i])->second, float(i * 40 + 150), 30.0f, 20.0f, 20.0f, float((sin(time * 0.1f) * i * 0.01f)));
-            }
+            drawText("game over", spriteMap, time, 4, 30.0f, 165.0f, 300.0f, false);
+        }
+        else if (victory)
+        {
+            drawText("victory", spriteMap, time, -1, 30.0f, 215.0f, 300.0f, false);
         }
 
         Flip();

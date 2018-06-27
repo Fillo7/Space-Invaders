@@ -2,27 +2,48 @@
 
 #include <cstdint>
 #include "../lib/leetlib.h"
+#include "enemy.h"
 
 class Bullet
 {
 public:
     Bullet() :
-        Bullet(0.0f, 0.0f, nullptr, 0)
+        Bullet(0.0f, 0.0f, nullptr, 0, nullptr)
     {}
 
-    Bullet(const float x, const float y, void* sprite, const uint32_t timeSnapshot) :
+    Bullet(const float x, const float y, void* sprite, const uint32_t timeSnapshot, std::array<Enemy, 50>* enemies) :
         x(x),
         y(y),
         size(10.0f),
         angle(0.0f),
         timeSnapshot(timeSnapshot),
         aliveTimer(0),
-        timeToLive(6 * 60),
-        sprite(sprite)
+        timeToLive(6 * SECOND_DURATION),
+        sprite(sprite),
+        active(true),
+        enemies(enemies)
     {}
 
     void update(const uint32_t currentTime)
     {
+        if (!active)
+        {
+            return;
+        }
+
+        if (enemies != nullptr)
+        {
+            for (int i = 0; i < int(enemies->size()); i++)
+            {
+                if (enemies->at(i).isActive() && intersectsEnemy(enemies->at(i)))
+                {
+                    enemies->at(i).destroy();
+                    destroy();
+                    return;
+                }
+            }
+        }
+
         uint32_t deltaTime = currentTime - timeSnapshot;
         aliveTimer += deltaTime;
         timeSnapshot = currentTime;
@@ -30,6 +51,11 @@ public:
         y -= 4.0f;
         angle += 0.1f;
         DrawSprite(sprite, x, y, size, size, angle, 0xffffffff);
+    }
+
+    void destroy()
+    {
+        active = false;
     }
 
     bool isExpired() const
@@ -62,6 +88,11 @@ public:
         return sprite;
     }
 
+    bool isActive() const
+    {
+        return active;
+    }
+
 private:
     float x;
     float y;
@@ -71,23 +102,31 @@ private:
     uint32_t aliveTimer;
     uint32_t timeToLive;
     void* sprite;
+    bool active;
+    std::array<Enemy, 50>* enemies;
 
-    bool intersectsEnemy()
+    // Checks for collision between bullet and enemy. Bullet collider is implemented as circle, enemy collider is implemented as rectangle.
+    bool intersectsEnemy(const Enemy& enemy) const
     {
-        // clamp(value, min, max) - limits value to the range min..max
+        float enemyLeft = enemy.getX() - enemy.getSize() / 2.0f;
+        float enemyRight = enemy.getX() + enemy.getSize() / 2.0f;
+        float enemyTop = enemy.getY() - enemy.getSize() / 2.0f;
+        float enemyBottom = enemy.getY() + enemy.getSize() / 2.0f;
 
-        // Find the closest point to the circle within the rectangle
-        /*float closestX = clamp(circle.X, rectangle.Left, rectangle.Right);
-        float closestY = clamp(circle.Y, rectangle.Top, rectangle.Bottom);
+        // Find the closest point to the bullet within the enemy.
+        float closestX = Clamp(x, enemyLeft, enemyRight);
+        float closestY = Clamp(y, enemyTop, enemyBottom);
 
-        // Calculate the distance between the circle's center and this closest point
-        float distanceX = circle.X - closestX;
-        float distanceY = circle.Y - closestY;
+        // Calculate the distance between the bullet's center and this closest point.
+        float distanceX = x - closestX;
+        float distanceY = y - closestY;
 
-        // If the distance is less than the circle's radius, an intersection occurs
+        // If the distance is less than the bullet's radius, an intersection occurs.
         float distanceSquared = (distanceX * distanceX) + (distanceY * distanceY);
-        return distanceSquared < (circle.Radius * circle.Radius);*/
 
-        return false;
+        // Make bullet collider slightly larger than bullet's size for player convenience. :)
+        float radius = size / 1.65f;
+
+        return distanceSquared < (radius * radius);
     }
 };

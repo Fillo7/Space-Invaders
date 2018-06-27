@@ -15,7 +15,8 @@ public:
         y(550.0f),
         size(50.0f),
         sprite(sprite),
-        active(true)
+        active(true),
+        bulletCooldown(0)
     {}
 
     void update(const uint32_t currentTime)
@@ -25,17 +26,36 @@ public:
             return;
         }
 
-        if (IsKeyDown(VK_LEFT))
+        if (bulletCooldown > 0)
+        {
+            bulletCooldown--;
+        }
+        if (!IsKeyDown(VK_SPACE))
+        {
+            bulletCooldown = 0;
+        }
+
+        if (IsKeyDown(VK_LEFT) || IsKeyDown('A'))
         {
             x -= 7.0f;
         }
-        else if (IsKeyDown(VK_RIGHT))
+        else if (IsKeyDown(VK_RIGHT) || IsKeyDown('D'))
         {
             x += 7.0f;
         }
 
-        x = max(size, min(800.0f - size, x));
+        x = Clamp(x, size, 800.0f - size);
         DrawSprite(sprite, x, y, size, size, PI + sin(currentTime * 0.1f) * 0.1f, 0xffffffff);
+    }
+
+    bool isShooting() const
+    {
+        if (active && IsKeyDown(VK_SPACE) && bulletCooldown <= 0)
+        {
+            bulletCooldown = 15;
+            return true;
+        }
+        return false;
     }
 
     void destroy()
@@ -74,4 +94,5 @@ private:
     float size;
     void* sprite;
     bool active;
+    mutable int bulletCooldown;
 };

@@ -58,17 +58,22 @@ public:
 
     void enrage()
     {
+        x = getX();
+        y = getY();
+        xo = 0.0f;
+        yo = 0.0f;
+
         this->enraged = true;
     }
 
     float getX() const
     {
-        return x;
+        return x + xo;
     }
 
     float getY() const
     {
-        return y;
+        return y + yo;
     }
 
     float getSize() const
@@ -79,6 +84,11 @@ public:
     void* getSprite()
     {
         return sprite;
+    }
+
+    bool isActive() const
+    {
+        return active;
     }
 
 private:
@@ -95,8 +105,8 @@ private:
 
     void magicAI(const uint32_t currentTime)
     {
-        xo = 0;
-        yo = 0;
+        xo = 0.0f;
+        yo = 0.0f;
         int n1 = int(currentTime) + order * order + order * order * order;
         int n2 = int(currentTime) + order + order * order + 3 * order * order * order;
 
@@ -113,7 +123,7 @@ private:
             yo += (1.0f - cos((n2 & 0xff) / 256.0f * 2.0f * PI)) * (150 + ((order * order) % 9));
         }
 
-        DrawSprite(sprite, x + xo, y + yo, float((10 + (order % 17))), float((10 + (order % 17))), 0.0f, 0xffffffff);
+        DrawSprite(sprite, getX(), getY(), float((10 + (order % 17))), float((10 + (order % 17))), 0.0f, 0xffffffff);
     }
 
     void enragedAI()
@@ -122,12 +132,13 @@ private:
         DrawSprite(sprite, x, y, float((10 + (order % 17))), float((10 + (order % 17))), 0.0f, 0xffff0000);
     }
 
+    // Checks for collision between enemy and player. Both enemy and player colliders are implemented as rectangles.
     bool intersectsPlayer() const
     {
-        float enemyLeft = (x + xo) - size / 2.0f;
-        float enemyRight = (x + xo) + size / 2.0f;
-        float enemyTop = (y + yo) - size / 2.0f;
-        float enemyBottom = (y + yo) + size / 2.0f;
+        float enemyLeft = getX() - size / 2.0f;
+        float enemyRight = getX() + size / 2.0f;
+        float enemyTop = getY() - size / 2.0f;
+        float enemyBottom = getY() + size / 2.0f;
 
         float playerLeft = player->getX() - player->getSize() / 2.0f;
         float playerRight = player->getX() + player->getSize() / 2.0f;
