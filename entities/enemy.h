@@ -22,7 +22,7 @@ public:
         order(0),
         active(true),
         enraged(false),
-        enragedSpeed(1.0f)
+        enragedSpeed(2.0f)
     {}
 
     void update(const uint32_t currentTime)

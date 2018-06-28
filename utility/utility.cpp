@@ -75,7 +75,13 @@ uint32_t loadHighScore(const std::string& filename)
 
     std::stringstream stream;
     stream << inputFile.rdbuf();
-    uint32_t result = std::stoul(stream.str());
+
+    if (stream.str().size() == 0)
+    {
+        return 0;
+    }
+
+    uint32_t result = std::stoul(stream.str()); // Assuming user does not tamper with the file, so not doing check for numeric string.
     return result;
 }
 
@@ -119,7 +125,7 @@ uint32_t getBonusScore(const uint32_t time)
     }
     else
     {
-        return 3 * (twoMinutes - timeInSeconds);
+        return 5 * (twoMinutes - timeInSeconds);
     }
 }
 

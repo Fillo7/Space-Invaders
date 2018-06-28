@@ -50,17 +50,10 @@ void enrageEnemy(std::array<Enemy, 50>& enemies, const uint32_t currentTime)
 
     float currentTimeFloat = float(currentTime / SECOND_DURATION);
     float twoMinutes = 120.0f;
-    float enragedSpeed = 2.0f + (4.0f * min(1.0f, currentTimeFloat / twoMinutes));
+    float enragedSpeed = 2.0f + (6.0f * min(1.0f, currentTimeFloat / twoMinutes));
 
-    if (enrageCandidates.size() == 1)
-    {
-        enrageCandidates[0]->enrage(enragedSpeed);
-    }
-    else
-    {
-        int enrageIndex = currentTime % enrageCandidates.size();
-        enrageCandidates[enrageIndex]->enrage(enragedSpeed);
-    }
+    int enrageIndex = currentTime % enrageCandidates.size();
+    enrageCandidates[enrageIndex]->enrage(enragedSpeed);
 }
 
 void updateBullets(std::list<Bullet>& activeBullets, const uint32_t currentTime)
@@ -138,11 +131,11 @@ void Game()
         drawText("space invaders", spriteMap, time, 5, 20.0f, 150.0f, 30.0f, true);
         if (!player.isActive())
         {
-            drawText("game over", spriteMap, time, 4, 30.0f, 165.0f, 300.0f, false);
+            drawText("game over", spriteMap, time, 4, 30.0f, 165.0f, 300.0f, true);
         }
         else if (victory)
         {
-            drawText("victory", spriteMap, time, -1, 30.0f, 215.0f, 300.0f, false);
+            drawText("victory", spriteMap, time, -1, 30.0f, 215.0f, 300.0f, true);
         }
 
         // Score calculation and text

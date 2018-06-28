@@ -7,9 +7,6 @@
 #include <direct.h>
 #include <malloc.h>
 #include <strsafe.h>
-#include <ios>
-#include <io.h>
-#include <fcntl.h>
 
 #include "fmod/api/inc/fmod.h"
 #pragma comment(lib, "lib/fmod/api/lib/fmodvc.lib")
@@ -159,7 +156,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_ACTIVATE:
-        if(WA_INACTIVE != wParam)
+        if (wParam != WA_INACTIVE)
         {
             // Make sure the device is acquired, if we are gaining focus.
         }
@@ -205,18 +202,6 @@ INT WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR cmd, INT)
 
     QueryPerformanceCounter(&starttime);
     QueryPerformanceFrequency(&freq);
-
-    // Debug console
-    AllocConsole();
-    SetConsoleTitleA("Console");
-    typedef struct { char* _ptr; int _cnt; char* _base; int _flag; int _file; int _charbuf; int _bufsiz; char* _tmpfname; } FILE_COMPLETE;
-    *(FILE_COMPLETE*)stdout = *(FILE_COMPLETE*)_fdopen(_open_osfhandle((long)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT), "w");
-    *(FILE_COMPLETE*)stderr = *(FILE_COMPLETE*)_fdopen(_open_osfhandle((long)GetStdHandle(STD_ERROR_HANDLE), _O_TEXT), "w");
-    *(FILE_COMPLETE*)stdin = *(FILE_COMPLETE*)_fdopen(_open_osfhandle((long)GetStdHandle(STD_INPUT_HANDLE), _O_TEXT), "r");
-    setvbuf(stdout, NULL, _IONBF, 0);
-    setvbuf(stderr, NULL, _IONBF, 0);
-    setvbuf(stdin, NULL, _IONBF, 0);
-    // End of debug console
 
     // Initialize Direct3D
     if (SUCCEEDED(InitD3D(hWnd, fullscreen)))

@@ -6,7 +6,7 @@
 #include <windows.h>
 
 //*************************************************************************************************************************************************//
-// Constants and utility functions.
+// Constants and clamp function.
 
 // Duration of one second in frames.
 const uint32_t SECOND_DURATION = 60;
